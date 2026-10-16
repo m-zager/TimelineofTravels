@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timeline of Travels</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Timeline of Travels</h1>
+  </header>
+
+  <main class="home">
+    <div class="globe-wrap">
+      <canvas id="globe" role="img" aria-label="Globe with a pin for each saved trip"></canvas>
+      <div id="tooltip" class="tooltip" hidden></div>
+    </div>
+    <p class="hint">Click anywhere on the globe to add a trip. Drag to spin it.</p>
+
+    <section class="trips" aria-labelledby="trips-heading">
+      <h2 id="trips-heading">Your trips</h2>
+      <ul id="trip-list" class="trip-list"></ul>
+      <p id="trips-empty" class="muted" hidden>No trips yet. Click a spot on the globe to add your first one.</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script type="module" src="js/home.js"></script>
+</body>
+</html>
