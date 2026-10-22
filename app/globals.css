@@ -1,0 +1,681 @@
+:root {
+  /* Palette */
+  --white: #ffffff;
+  --charcoal: #2a2a2a;
+  --slate: #f7f5f4;
+  --purple: #7c71fd;
+  --green: #005525;
+  --orange: #fe6b5b;
+  --blue: #3e9098;
+  --lime: #dafd81;
+
+  /* Roles */
+  --bg: var(--slate);
+  --surface: var(--white);
+  --text: var(--charcoal);
+  --muted: rgba(42, 42, 42, 0.68);
+  --border: rgba(42, 42, 42, 0.16);
+  --primary: var(--green);
+  --primary-text: var(--white);
+  --focus: var(--purple);
+  --danger: var(--orange);
+  --land: var(--charcoal);
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+h1 {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+h2 { font-size: 1.25rem; font-weight: 600; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+
+/* ---------- Home ---------- */
+
+/* Hero and globe card follow the 1920 × 1013 Figma hero. Unitless numbers are design
+   pixels; --s converts them, shrinking to fit the viewport's width and height but
+   never past 1px. */
+.home {
+  --s: min(1px, 100vw / 1920, 100svh / 1013);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 4rem;
+}
+
+/* Exactly one screen tall, so the globe stays out of view until you scroll. The text sits
+   at the exact center of the screen and the four photos frame it from the corners.
+   --w is the base photo width: it follows the viewport's width and height so the photos
+   always fit on one screen. */
+.hero {
+  --w: clamp(180px, min(23vw, 31svh), 380px);
+  --text-half: max(160px, calc(223 * var(--s)));
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  overflow-x: clip;
+}
+
+.hero-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% + var(--py, 0px)));
+  width: calc(var(--text-half) * 2);
+  display: grid;
+  gap: calc(32 * var(--s));
+  text-align: center;
+  line-height: normal;
+}
+
+.hero-title {
+  font-size: max(12px, calc(16 * var(--s)));
+  font-weight: 900;
+  letter-spacing: normal;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+/* Lines are broken explicitly; the first line is a hair wider than the 446px box. */
+.hero-tagline {
+  font-size: max(22px, calc(36 * var(--s)));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Scoped so it wins over the generic .btn padding and weight defined further down.
+   16px × 24px padding in the design, less the 1px .btn border. */
+.hero-text .hero-cta {
+  justify-self: center;
+  margin-top: calc(36 * var(--s)); /* 68px from the tagline, with the 32px gap */
+  padding: 15px 23px;
+  font-weight: 500;
+}
+
+/* Each photo is placed by its center: --y down the hero, and --x across it, pushed further
+   out when needed so its rotated outline stays 32px clear of the text (0.68 × width is
+   half the rotated outline's width, with margin). --size varies the photos a little. */
+.hero-photo {
+  --pw: calc(var(--w) * var(--size, 1));
+  --clear: calc(var(--text-half) + 32px + var(--pw) * 0.68);
+  position: absolute;
+  top: var(--y);
+  width: var(--pw);
+  aspect-ratio: 318 / 390;
+  margin: 0;
+  /* --py and --spin are set on scroll by components/Hero.tsx; --nudge staggers them on mobile. */
+  transform: translate(-50%, calc(-50% + var(--py, 0px) + var(--nudge, 0px))) rotate(var(--spin, 0deg));
+  will-change: transform;
+}
+
+.hero-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--pw) * 0.1);
+  box-shadow: 0 calc(var(--pw) * 0.0125) calc(var(--pw) * 0.235) rgba(42, 42, 42, 0.3);
+  transform: rotate(var(--angle));
+}
+
+/* The photos sit near the screen's side edges and run partly off them; the hero clips the
+   overflow. Chip positions are the chip's center, as % of the (unrotated) photo box: each
+   sits on the corner nearest the text, so it stays on screen. Left photos stack above
+   right ones so their chips stay on top where photos overlap on mobile. */
+/* Staggered rather than a rectangle, with clearly different sizes: a large Zion high and
+   far out on the left with a mid-size Teton lower and further in; a small Flattops high on
+   the right with a large Glacier low and far out. Chips land in a different spot on each
+   photo, each with its own tilt, always on the side that stays on screen. */
+.hero-photo--zion {
+  --y: 26%; --size: 1.15; --angle: -10deg;
+  --chip-x: 80%; --chip-y: 12%; --chip-angle: -6deg;
+  left: min(4%, calc(50% - var(--clear)));
+  z-index: 1;
+}
+
+.hero-photo--flattops {
+  --y: 32%; --size: 0.7; --angle: 12deg;
+  --chip-x: 14%; --chip-y: 97%; --chip-angle: 8deg;
+  left: max(95%, calc(50% + var(--clear)));
+}
+
+.hero-photo--teton {
+  --y: 72%; --size: 0.88; --angle: 5deg;
+  --chip-x: 90%; --chip-y: 55%; --chip-angle: 4deg;
+  left: min(13%, calc(50% - var(--clear)));
+  z-index: 1;
+}
+
+.hero-photo--glacier {
+  --y: 76%; --angle: -7deg;
+  --chip-x: 18%; --chip-y: 7%; --chip-angle: -10deg;
+  left: max(97%, calc(50% + var(--clear)));
+}
+
+.chip {
+  position: absolute;
+  left: var(--chip-x);
+  top: var(--chip-y);
+  transform: translate(-50%, -50%) rotate(var(--chip-angle, 0deg));
+  padding: 1em;
+  border-radius: 0.75em;
+  color: var(--lime);
+  /* From the hero's base photo width, not each photo's, so every chip is the same size. */
+  font-size: max(10px, calc(var(--w) * 16 / 318));
+  font-weight: 900;
+  line-height: normal;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chip--green { background: var(--green); }
+.chip--orange { background: var(--orange); }
+.chip--purple { background: var(--purple); }
+.chip--blue { background: var(--blue); }
+
+/* No visible container: the globe sits directly on the page. This box just sizes it and
+   anchors the zoom buttons and the "Add trip here" bar. */
+.globe-card {
+  --size: calc(966 * var(--s));
+  scroll-margin-top: 2rem;
+  position: relative;
+  width: var(--size);
+  aspect-ratio: 1;
+}
+
+.globe {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+
+.globe:active { cursor: grabbing; }
+
+.globe-zoom {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.globe-zoom-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--charcoal);
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.globe-zoom-btn:hover { border-color: var(--purple); }
+
+.new-trip-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 0.6rem 0.6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 0 6px 24px rgba(42, 42, 42, 0.18);
+}
+
+.new-trip-text { font-size: 0.9375rem; }
+
+/* Trip markers on the globe. The .marker wrapper is positioned by globe.gl. */
+.marker { pointer-events: none; }
+
+.pin {
+  pointer-events: auto;
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 2px var(--orange), 0 4px 12px rgba(42, 42, 42, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.pin img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pin--no-photo {
+  width: 20px;
+  height: 20px;
+}
+
+.pin:hover,
+.pin:focus-visible { transform: scale(1.2); }
+
+.pin-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  background: var(--charcoal);
+  color: var(--white);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.pin:hover .pin-label,
+.pin:focus-visible .pin-label { opacity: 1; }
+
+.pin--new::after,
+.pin-pending::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 3px solid var(--pulse);
+  animation: pin-pulse 1.2s ease-out infinite;
+}
+
+.pin--new { --pulse: var(--orange); }
+
+.pin-pending {
+  --pulse: var(--purple);
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 4px 12px rgba(42, 42, 42, 0.35);
+}
+
+@keyframes pin-pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(2.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin--new::after,
+  .pin-pending::after { animation: none; opacity: 0; }
+}
+
+/* The globe's land dots (components/dottedLand.ts), drawn over the WebGL sphere. Clicks and
+   drags pass through to the globe. */
+.dotted-land {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  /* Two photos above the text and two below. The photo rows split the leftover height
+     equally (1fr each), so the text stays at the exact center whatever the photo sizes.
+     Photos are sized from the viewport so everything fits on one screen. */
+  .hero {
+    --w: min(42vw, 20svh, 280px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto 1fr;
+    grid-template-areas:
+      "zion flattops"
+      "text text"
+      "teton glacier";
+    justify-items: center;
+    row-gap: clamp(1rem, 3svh, 2rem);
+    padding: 0 1rem;
+  }
+
+  .hero-text {
+    grid-area: text;
+    position: static;
+    transform: translateY(var(--py, 0px));
+    width: auto;
+    gap: 1rem;
+  }
+
+  .hero-text .hero-cta { margin-top: 0.5rem; }
+
+  /* --shift pushes each column outward so the photos run off the screen's sides. */
+  .hero .hero-photo {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: translate(var(--shift), calc(var(--py, 0px) + var(--nudge, 0px))) rotate(var(--spin, 0deg));
+  }
+
+  /* Staggered with transforms, not margins, so the row heights (and centering) don't change.
+     Chips are wider than the photos here, so in each row one sits at the top edge and the
+     other at the bottom, keeping them from colliding; they lean inward to stay on screen. */
+  .hero .hero-photo { align-self: center; }
+  .hero-photo--zion, .hero-photo--teton { justify-self: start; }
+  .hero-photo--flattops, .hero-photo--glacier { justify-self: end; }
+  .hero-photo--zion { grid-area: zion; --shift: -20%; --nudge: -10px; --chip-x: 66%; --chip-y: 12%; }
+  .hero-photo--flattops { grid-area: flattops; --shift: 4%; --nudge: 30px; --chip-x: -8%; --chip-y: 96%; }
+  .hero-photo--teton { grid-area: teton; --shift: -4%; --nudge: -20px; --chip-x: 74%; --chip-y: 70%; }
+  .hero-photo--glacier { grid-area: glacier; --shift: 22%; --nudge: 16px; --chip-x: 16%; --chip-y: 8%; }
+
+  .globe-card { --size: calc(100vw - 32px); }
+}
+
+.hint { color: var(--muted); text-align: center; padding: 0 1rem; }
+
+.trips {
+  width: min(100% - 2rem, 560px);
+  margin-top: 1.5rem;
+}
+
+.trips h2 { margin-bottom: 0.75rem; }
+
+.trip-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.trip-list a {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+}
+
+.trip-list a:hover,
+.trip-list a:focus-visible { border-color: var(--purple); }
+
+.trip-name { font-weight: 600; }
+.trip-meta { color: var(--muted); font-size: 0.875rem; }
+
+/* ---------- Trip page ---------- */
+
+.trip-page {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back-link:hover { color: var(--text); }
+
+.trip-page h1 { font-size: clamp(1.75rem, 5vw, 2.75rem); }
+
+.coords { margin: 0.25rem 0 2rem; }
+
+.trip-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field > span,
+.photos legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  color-scheme: light;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.photos {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.photos legend { margin-bottom: 0.35rem; }
+
+.dropzone {
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone.dragging,
+.dropzone:focus-within {
+  border-color: var(--purple);
+  color: var(--text);
+}
+
+.dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.photo-grid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.photo-view {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.photo-view img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(42, 42, 42, 0.75);
+  color: var(--white);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.photo-remove:hover {
+  background: var(--orange);
+  color: var(--charcoal);
+}
+
+.form-error {
+  padding: 0.6rem 0.9rem;
+  border-left: 4px solid var(--danger);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover { border-color: var(--text); }
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+.btn-primary:hover { filter: brightness(1.25); border-color: var(--primary); }
+
+.btn-dark {
+  background: var(--charcoal);
+  border-color: var(--charcoal);
+  color: var(--white);
+}
+
+.btn-dark:hover { filter: brightness(1.5); border-color: var(--charcoal); }
+.btn-primary:disabled { opacity: 0.6; cursor: progress; }
+
+.btn-danger {
+  margin-left: auto;
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--charcoal);
+}
+
+.storage-note { margin-top: 2rem; }
+
+.viewer {
+  max-width: min(92vw, 1200px);
+  max-height: 92vh;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.viewer::backdrop { background: rgba(42, 42, 42, 0.85); }
+
+.viewer img {
+  display: block;
+  max-width: 100%;
+  max-height: 85vh;
+}
+
+.viewer form {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem;
+}
