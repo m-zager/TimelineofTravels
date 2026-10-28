@@ -12,9 +12,10 @@ import glacier from "@/assets/images/glacier-national-park.jpg";
 // folds into its transform.
 //
 // speed: px moved per px scrolled, as [desktop, mobile]. Positive lags the page, negative
-// runs ahead of it. The top photos fly off ahead of the page and the bottom ones lag, so
-// the frame opens up as you scroll. On mobile the text sits between the photo rows, so it
-// rises gently instead of lagging into the bottom row.
+// runs ahead of it. The top photos fly off ahead of the page and the bottom ones drift more
+// slowly, so the frame opens up as you scroll. Nothing lags, so no photo drifts down over
+// the Globe / Timeline toggle below the hero. On mobile the text sits between the photo
+// rows and rises a little faster than the bottom row, so they still separate.
 // spin: extra degrees of rotation by the time the hero has scrolled away.
 type Layer = { speed: [number, number]; spin: number };
 
@@ -45,7 +46,7 @@ const PHOTOS: (Layer & { id: string; src: StaticImageData; alt: string; label: s
     alt: "Cloud-wrapped peaks above a still mountain lake in Grand Teton National Park",
     label: "Teton National Park",
     chip: "purple",
-    speed: [-0.05, 0.08],
+    speed: [-0.05, -0.04],
     spin: 5,
   },
   {
@@ -54,7 +55,7 @@ const PHOTOS: (Layer & { id: string; src: StaticImageData; alt: string; label: s
     alt: "Jagged peaks above a forested valley in Glacier National Park",
     label: "Glacier National Park",
     chip: "blue",
-    speed: [-0.12, 0.12],
+    speed: [-0.12, -0.06],
     spin: -5,
   },
 ];
