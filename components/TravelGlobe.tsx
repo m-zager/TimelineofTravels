@@ -238,7 +238,7 @@ export default function TravelGlobe({ trips, focusId }: { trips: TripWithCover[]
   }
 
   return (
-    <section id="globe-section" className="globe-card" aria-label="Globe of your trips">
+    <section className="globe-card" aria-label="Globe of your trips">
       <div ref={containerRef} className="globe" />
 
       <div className="globe-zoom">
