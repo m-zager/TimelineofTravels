@@ -7,6 +7,7 @@ import type { GlobeInstance } from "globe.gl";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import { formatCoords, formatMonth } from "@/lib/format";
+import { loadPlaces, placeAt, type Place } from "@/lib/places";
 import type { TripWithCover } from "@/components/HomeTrips";
 import { createDottedLand, type DottedLand } from "@/components/dottedLand";
 
@@ -74,6 +75,10 @@ export default function TravelGlobe({ trips, focusId }: { trips: TripWithCover[]
   const spinRef = useRef({ pause: () => {}, resume: (delay?: number) => void delay });
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState<Spot | null>(null);
+  // The named place for a picked spot. `place` is null if the lookup failed.
+  const [lookup, setLookup] = useState<{ spot: Spot; place: Place | null } | null>(null);
+  // undefined while the lookup for the current spot is still running.
+  const place = lookup && lookup.spot === pending ? lookup.place : undefined;
 
   // Create the globe once. globe.gl touches `window` on import, so it's loaded here.
   useEffect(() => {
@@ -154,6 +159,9 @@ export default function TravelGlobe({ trips, focusId }: { trips: TripWithCover[]
       });
       resizeObserver.observe(container);
 
+      // Start loading the place names now so a click can be named right away.
+      loadPlaces().catch(() => {});
+
       fetch(LAND_URL)
         .then((res) => res.json())
         .then((topo: Topology<{ land: GeometryCollection }>) => {
@@ -216,6 +224,21 @@ export default function TravelGlobe({ trips, focusId }: { trips: TripWithCover[]
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [pending]);
 
+  // Name the picked spot: the state or country it's in, or the nearest one.
+  useEffect(() => {
+    if (!pending) return;
+    let cancelled = false;
+    loadPlaces()
+      .then((places) => placeAt(places, pending.lat, pending.lon))
+      .catch(() => null)
+      .then((found) => {
+        if (!cancelled) setLookup({ spot: pending, place: found });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pending]);
+
   // After saving a trip: bring the globe into view and fly to its pin.
   useEffect(() => {
     const globe = globeRef.current;
@@ -252,8 +275,19 @@ export default function TravelGlobe({ trips, focusId }: { trips: TripWithCover[]
 
       {pending && (
         <div className="new-trip-bar">
-          <span className="new-trip-text">
-            New trip at <strong>{formatCoords(pending)}</strong>
+          <span className="new-trip-text" aria-live="polite">
+            {place === undefined ? (
+              "Finding the nearest place…"
+            ) : place ? (
+              <>
+                New trip {place.inside ? "in" : "near"} <strong>{place.name}</strong>
+              </>
+            ) : (
+              // Fallback if the place names couldn't load.
+              <>
+                New trip at <strong>{formatCoords(pending)}</strong>
+              </>
+            )}
           </span>
           <Link
             className="btn btn-primary"
